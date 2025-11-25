@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./assets/Litecoin.jpg" width="30%" />
+  <img src="../assets/Litecoin.jpg" width="30%" />
 </div>
 
 ```

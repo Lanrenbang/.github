@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="./assets/USDT-TRC20.jpg" width="30%" />
+  <img src="../assets/USDT-TRC20.jpg" width="30%" />
 </div>
 
 ```
