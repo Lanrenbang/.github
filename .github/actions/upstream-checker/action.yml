@@ -48,14 +48,13 @@ outputs:
 
 runs:
   using: "composite"
-  env:
-    GH_TOKEN: ${{ inputs.token || secrets.GITHUB_TOKEN }}  # Also used for GitHub CLI
-    STATE_FILE: ${{ inputs.state_file }}
   steps:
     - name: 'Check upstream repositories'
       id: check
       shell: bash
       env:
+        TOKEN: ${{ inputs.token }}
+        STATE_FILE: ${{ inputs.state_file }}
         REPOSITORIES: ${{ inputs.repositories }}
       run: |
         set -euo pipefail
@@ -67,7 +66,7 @@ runs:
         api_get() {
           local url="$1"
           local args=(-s -L -H "Accept: application/vnd.github.v3+json")
-          [[ -n "${GH_TOKEN:-}" ]] && args+=(-H "Authorization: Bearer $GH_TOKEN")
+          [[ -n "${TOKEN:-}" ]] && args+=(-H "Authorization: Bearer $TOKEN")
           curl "${args[@]}" "$url"
         }
         
@@ -283,6 +282,8 @@ runs:
       if: steps.check.outputs.has_updates == 'true' && inputs.state_file != ''
       shell: bash
       env:
+        GH_TOKEN: ${{ inputs.token }}
+        STATE_FILE: ${{ inputs.state_file }}
         PR_LABELS: ${{ inputs.pr_labels }}
         AUTO_MERGE: ${{ inputs.auto_merge }}
         UPDATE_SUMMARY: ${{ steps.check.outputs.update_summary }}
