@@ -49,7 +49,7 @@ outputs:
 runs:
   using: "composite"
   env:
-    GH_TOKEN: ${{ inputs.token || github.token }}  # Also used for GitHub CLI
+    GH_TOKEN: ${{ inputs.token || secrets.GITHUB_TOKEN }}  # Also used for GitHub CLI
     STATE_FILE: ${{ inputs.state_file }}
   steps:
     - name: 'Check upstream repositories'
