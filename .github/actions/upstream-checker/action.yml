@@ -358,19 +358,15 @@ runs:
         
         # Create PR with labels
         echo "📋 Creating PR..."
+        PR_ARGS=(--title "$PR_TITLE" --body "$PR_BODY" --base "$BASE_BRANCH" --head "$BRANCH")
+        
         IFS=',' read -ra LABEL_ARRAY <<< "$PR_LABELS"
-        LABEL_ARGS=""
         for label in "${LABEL_ARRAY[@]}"; do
           label=$(echo "$label" | xargs)  # trim whitespace
-          [[ -n "$label" ]] && LABEL_ARGS+="--label \"$label\" "
+          [[ -n "$label" ]] && PR_ARGS+=(--label "$label")
         done
         
-        PR_URL=$(eval gh pr create \
-          --title "\"$PR_TITLE\"" \
-          --body "\"$PR_BODY\"" \
-          --base "$BASE_BRANCH" \
-          --head "$BRANCH" \
-          $LABEL_ARGS)
+        PR_URL=$(gh pr create "${PR_ARGS[@]}")
         
         PR_NUMBER=$(echo "$PR_URL" | grep -oE '[0-9]+$')
         
