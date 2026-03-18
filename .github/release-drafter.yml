@@ -1,0 +1,78 @@
+name-template: 'v$RESOLVED_VERSION 🚀'
+tag-template: 'v$RESOLVED_VERSION'
+
+template: |
+  ## What's Changed
+
+  $CHANGES
+
+  ---
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION
+
+change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+commit-template: '  - $SUBJECT'
+change-title-escapes: '\<*_&' # You can add # and @ to disable mentions, and add ` to disable code blocks.
+
+autolabeler:
+  - label: "BREAKING CHANGE"
+    branch:
+      - '/breaking\/.+/'
+    title:
+      - '/breaking/i'
+  - label: 'enhancement'
+    branch:
+      - '/feature\/.+/'
+    title:
+      - '/feature/i'
+      - '/feat/i'
+  - label: 'bug'
+    branch:
+      - '/fix\/.+/'
+      - '/bugfix\/.+/'
+      - '/bug\/.+/'
+    title:
+      - '/fix/i'
+  - label: 'chore'
+    branch:
+      - '/chore\/.+/'
+      - '/style\/.+/'
+  - label: 'documentation'
+    branch:
+      - '/doc\/.+/'
+      - '/docs\/.+/'
+    files:
+      - '*.md'
+      - 'go.mod'
+      - 'go.sum'
+
+version-resolver:
+  major:
+    labels:
+      - 'BREAKING CHANGE'
+  minor:
+    labels:
+      - 'enhancement'
+  patch:
+    labels:
+      - 'documentation'
+      - 'bug'
+      - "fix"
+      - "chore"
+  default: patch
+
+categories:
+  - title: "🚨 BREAKING CHANGES 🚨"
+    labels:
+      - "BREAKING CHANGE"
+  - title: "🚀 New Features"
+    labels:
+      - "enhancement"
+  - title: '🐛 Bug Fixes'
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+  - title: "🛠️ Other Changes"
+    labels:
+      - "chore"
+      - "documentation"

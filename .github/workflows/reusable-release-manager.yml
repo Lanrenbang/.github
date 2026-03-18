@@ -1,0 +1,110 @@
+# .github/workflows/reusable-release-manager.yml
+name: '🚀 Reusable Release Manager'
+
+on:
+  workflow_call:
+    inputs:
+      has_docker:
+        description: 'Whether this project has Docker images to build'
+        required: false
+        type: boolean
+        default: false
+      publish:
+        description: 'Publish the draft as an official release (passed from workflow_dispatch)'
+        required: false
+        type: boolean
+        default: false
+      prerelease_identifier:
+        description: 'Prerelease identifier (alpha, beta, rc, etc.)'
+        required: false
+        type: string
+        default: ''
+      event_name:
+        description: 'The original event name from the caller (github.event_name)'
+        required: true
+        type: string
+      triggered_by:
+        description: 'Who triggered the dispatch (from client_payload.triggered_by)'
+        required: false
+        type: string
+        default: ''
+    secrets:
+      bot_pat:
+        description: 'GitHub PAT for triggering downstream workflows'
+        required: true
+
+jobs:
+  draft-or-publish:
+    permissions:
+      contents: write
+      pull-requests: write  # write for autolabeler, otherwise read
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Determine release parameters'
+        id: params
+        shell: bash
+        run: |
+          PUBLISH=false
+          EVENT_MODE="manual"
+          PRERELEASE=false
+          PRERELEASE_ID=""
+
+          echo "📋 Event: ${{ inputs.event_name }}"
+
+          case "${{ inputs.event_name }}" in
+            workflow_dispatch)
+              if [[ "${{ inputs.publish }}" == "true" ]]; then
+                PUBLISH=true
+                echo "   ✓ Will publish release"
+
+                if [[ -n "${{ inputs.prerelease_identifier }}" ]]; then
+                  PRERELEASE=true
+                  PRERELEASE_ID="${{ inputs.prerelease_identifier }}"
+                  echo "   ✓ Prerelease: $PRERELEASE_ID"
+                fi
+              fi
+              ;;
+
+            repository_dispatch)
+              TRIGGERED_BY="${{ inputs.triggered_by }}"
+              echo "   Repository dispatch from: $TRIGGERED_BY"
+              if [[ "$TRIGGERED_BY" == "upstream-watcher" ]]; then
+                PUBLISH=true
+                EVENT_MODE="upstream"
+                echo "   ✓ Upstream update detected, will publish release"
+              fi
+              ;;
+            *)
+              echo "   Standard event, updating draft only"
+              ;;
+          esac
+
+          {
+            echo "publish=$PUBLISH"
+            echo "event_mode=$EVENT_MODE"
+            echo "prerelease=$PRERELEASE"
+            echo "prerelease_id=$PRERELEASE_ID"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: 'Run Release Draft'
+        id: drafter
+        uses: release-drafter/release-drafter@b1476f6e6eb133afa41ed8589daba6dc69b4d3f5  # v6.1.0
+        with:
+          commitish: ${{ github.event.repository.default_branch }}
+          publish: ${{ steps.params.outputs.publish }}
+          prerelease: ${{ steps.params.outputs.prerelease }}
+          prerelease-identifier: ${{ steps.params.outputs.prerelease_id }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 'Dispatch to Docker Build'
+        if: steps.params.outputs.publish == 'true' && inputs.has_docker
+        uses: peter-evans/repository-dispatch@28959ce8df70de7be546dd1250a005dd32156697  # v4.0.1
+        with:
+          token: ${{ secrets.bot_pat }}
+          event-type: release-auto
+          client-payload: |
+            {
+              "tag_name": "${{ steps.drafter.outputs.tag_name }}",
+              "mode": "${{ steps.params.outputs.event_mode }}"
+            }
