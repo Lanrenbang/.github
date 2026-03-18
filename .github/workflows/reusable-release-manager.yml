@@ -88,7 +88,7 @@ jobs:
 
       - name: 'Run Release Draft'
         id: drafter
-        uses: release-drafter/release-drafter@b1476f6e6eb133afa41ed8589daba6dc69b4d3f5  # v6.1.0
+        uses: release-drafter/release-drafter@44a942e465867c7465b76aa808ddca6e0acae5da  # v7.1.0
         with:
           commitish: ${{ github.event.repository.default_branch }}
           publish: ${{ steps.params.outputs.publish }}
